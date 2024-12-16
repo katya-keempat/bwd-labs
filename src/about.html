@@ -21,10 +21,7 @@
       <nav class="header__navigation">
         <ul id="navigation" class="header__navigation-list">
           <li class="header__navigation-list-item">
-            <a
-              href="./index.html"
-              >Главная</a
-            >
+            <a href="./index.html">Главная</a>
           </li>
           <li class="header__navigation-list-item">
             <a href="./projects.html">Проекты </a>
@@ -33,13 +30,16 @@
             <a href="./todo.html">Список задач</a>
           </li>
           <li class="header__navigation-list-item">
-            <a 
-            onclick="event.preventDefault()"
+            <a
+              onclick="event.preventDefault()"
               class="active"
-            href="./about.html">О приложении </a>
+              href="./about.html"
+              >О приложении
+            </a>
           </li>
         </ul>
       </nav>
+      <button id="theme-toggle" class="theme-toggle">🌙</button>
       <div id="hamburger" class="hamburger hamburger--collapse hide">
         <div class="hamburger-box">
           <div class="hamburger-inner"></div>
@@ -53,23 +53,45 @@
       </div>
       <img class="main-image" src="./images/mainImage.svg" />
     </main>
+
+    <!-- Добавляем кнопку для переключения темы -->
+   
+
+    <!-- Скрипт переключения темы -->
+    <script>
+      const themeToggle = document.getElementById("theme-toggle");
+      const body = document.body;
+
+      // Функция для переключения темы
+      themeToggle.addEventListener("click", () => {
+        body.classList.toggle("dark-theme");
+        // Обновляем иконку на кнопке в зависимости от темы
+        if (body.classList.contains("dark-theme")) {
+          themeToggle.textContent = "☀️";  // Иконка для светлой темы
+        } else {
+          themeToggle.textContent = "🌙";  // Иконка для темной темы
+        }
+      });
+
+      // При загрузке страницы сохраняем текущую тему (если есть) в localStorage
+      window.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+          body.classList.add("dark-theme");
+          themeToggle.textContent = "☀️";  // Иконка для светлой темы
+        } else {
+          themeToggle.textContent = "🌙";  // Иконка для темной темы
+        }
+      });
+
+      // Сохраняем выбранную тему в localStorage
+      window.addEventListener("unload", () => {
+        if (body.classList.contains("dark-theme")) {
+          localStorage.setItem("theme", "dark");
+        } else {
+          localStorage.setItem("theme", "light");
+        }
+      });
+    </script>
   </body>
-  <script>
-    const hamburger = document.getElementById("hamburger");
-    const navigation = document.getElementById("navigation");
-
-    hamburger.addEventListener("click", () => {
-      hamburger.classList.toggle("is-active");
-
-      // Убираем/добавляем класс show с небольшим временем задержки
-      if (navigation.classList.contains("show")) {
-        navigation.classList.remove("show");
-      } else {
-        navigation.style.display = "flex"; // Показываем перед добавлением класса
-        setTimeout(() => {
-          navigation.classList.add("show");
-        }, 10); // Небольшая задержка для запуска анимации
-      }
-    });
-  </script>
 </html>
