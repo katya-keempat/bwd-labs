@@ -17,7 +17,7 @@
   <body class="container">
     <script src="bundle.js"></script>
     <header class="header">
-      <img src="../images/logo.svg" />
+      <img src="./images/logo.svg" />
       <nav class="header__navigation">
         <ul id="navigation" class="header__navigation-list">
           <li class="header__navigation-list-item">
@@ -39,6 +39,7 @@
           </li>
         </ul>
       </nav>
+      <button id="theme-toggle" class="theme-toggle">🌙</button>
       <div id="hamburger" class="hamburger hamburger--collapse hide">
         <div class="hamburger-box">
           <div class="hamburger-inner"></div>
@@ -50,7 +51,6 @@
       <button onclick="window.addTaskDialog.showModal()">
         Добавить задачу
       </button>
-      <button onclick="exportToICS()">Экспортировать задачи</button>
       <div id="tasks" class="todo">
         <div class="column" data-status="todo">
           <h2>Сделать</h2>
@@ -70,7 +70,6 @@
           >
           <h2>Добавить задачу</h2>
           <input type="text" id="taskInput" placeholder="Название задачи" />
-          <input type="date" id="taskDate" placeholder="Дата выполнения" />
           <menu>
             <button id="saveTaskButton">Сохранить</button>
             <button
@@ -86,9 +85,48 @@
     </main>
 
     <script>
+      const themeToggle = document.getElementById("theme-toggle");
+      const body = document.body;
+
+      // Функция для переключения темы
+      themeToggle.addEventListener("click", () => {
+        body.classList.toggle("dark-theme");
+        document
+          .querySelectorAll(".card")
+          .forEach((item) => item.classList.toggle("dark-theme"));
+        // Обновляем иконку на кнопке в зависимости от темы
+        if (body.classList.contains("dark-theme")) {
+          themeToggle.textContent = "☀️"; // Иконка для светлой темы
+        } else {
+          themeToggle.textContent = "🌙"; // Иконка для темной темы
+        }
+      });
+
+      // При загрузке страницы сохраняем текущую тему (если есть) в localStorage
+      window.addEventListener("DOMContentLoaded", () => {
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+          body.classList.add("dark-theme");
+          document
+            .querySelectorAll(".card")
+            .forEach((item) => item.classList.add("dark-theme"));
+          themeToggle.textContent = "☀️"; // Иконка для светлой темы
+        } else {
+          themeToggle.textContent = "🌙"; // Иконка для темной темы
+        }
+      });
+
+      // Сохраняем выбранную тему в localStorage
+      window.addEventListener("unload", () => {
+        if (body.classList.contains("dark-theme")) {
+          localStorage.setItem("theme", "dark");
+        } else {
+          localStorage.setItem("theme", "light");
+        }
+      });
+
       const dialog = document.getElementById("addTaskDialog");
       const taskInput = document.getElementById("taskInput");
-      const taskDate = document.getElementById("taskDate");
       const saveTaskButton = document.getElementById("saveTaskButton");
       const columns = document.querySelectorAll(".column");
       const TASKS_KEY = "tasks";
@@ -117,11 +155,14 @@
 
           const taskElement = document.createElement("div");
           taskElement.classList.add("card");
+          if (body.classList.contains("dark-theme")) {
+            taskElement.classList.add("dark-theme"); // Добавляем класс dark-theme сразу
+          }
           taskElement.draggable = true;
           taskElement.dataset.index = index;
           taskElement.dataset.status = task.status;
           taskElement.innerHTML = `
-      ${task.name} (Дата: ${task.date})
+      ${task.name}
       <button onclick="deleteTask(${index})">Удалить</button>
     `;
           taskElement.addEventListener("dragstart", dragStart);
@@ -129,15 +170,13 @@
           column.appendChild(taskElement);
         });
       }
-
       // Сохранение задачи
       saveTaskButton.addEventListener("click", () => {
         const taskName = taskInput.value.trim();
-        const taskDueDate = taskDate.value;
 
-        if (taskName && taskDueDate) {
+        if (taskName) {
           const tasks = JSON.parse(localStorage.getItem(TASKS_KEY)) || [];
-          tasks.push({ name: taskName, date: taskDueDate, status: "todo" });
+          tasks.push({ name: taskName, status: "todo" });
           localStorage.setItem(TASKS_KEY, JSON.stringify(tasks));
           loadTasks();
           dialog.close();
@@ -179,38 +218,6 @@
       });
 
       // Экспорт задач в ICS
-      function exportToICS() {
-        const tasks = JSON.parse(localStorage.getItem(TASKS_KEY)) || [];
-        if (!tasks.length) {
-          alert("Нет задач для экспорта!");
-          return;
-        }
-
-        let icsContent = "BEGIN:VCALENDAR\nVERSION:2.0\n";
-        tasks.forEach((task, index) => {
-          const dueDate = new Date(task.date)
-            .toISOString()
-            .replace(/[-:]/g, "")
-            .split(".")[0];
-          icsContent += `
-BEGIN:VEVENT
-UID:${index}@todoapp
-DTSTAMP:${new Date().toISOString().replace(/[-:]/g, "").split(".")[0]}
-SUMMARY:${task.name}
-DTSTART:${dueDate}
-END:VEVENT
-          `.trim();
-        });
-        icsContent += "\nEND:VCALENDAR";
-
-        const blob = new Blob([icsContent], { type: "text/calendar" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = "tasks.ics";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
 
       // Инициализация
       document.addEventListener("DOMContentLoaded", loadTasks);
